@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>局域网聊天室</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            macaron: {
+              pink:   '#F8B4C8',
+              peach:  '#FCCB9F',
+              yellow: '#FDE89A',
+              mint:   '#B5EAD7',
+              blue:   '#B5D8EB',
+              lav:    '#C7CEEA',
+              lilac:  '#E2C6FF',
+              rose:   '#FFD1DC',
+              'pink-d':   '#D4839A',
+              'mint-d':   '#7BC4A8',
+              'blue-d':   '#7BAFCB',
+              'lav-d':    '#9A9FC5',
+            },
+            surface: {
+              main:   '#FFF5F7',
+              card:   '#FFFFFF',
+              input:  '#F9F4F6',
+              sidebar:'#FDF2F5',
+              hover:  '#FDF0F3',
+              msg2:   '#FFFFFF',
+              msg1:   '#E8F5F9',
+            },
+          },
+          fontFamily: {
+            sans: ['"Noto Sans SC"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-surface-main text-gray-700 font-sans antialiased">
+
+  <div class="max-w-lg mx-auto px-5 py-10 min-h-screen flex flex-col justify-center items-center">
+
+    <!-- 首页面板 -->
+    <div id="homePanel">
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <div class="text-6xl mb-3 drop-shadow-sm">💬</div>
+        <h1 class="text-3xl font-bold text-gray-700 mb-2">局域网聊天室</h1>
+        <p class="text-sm text-gray-400">输入昵称，创建或加入一个房间</p>
+      </div>
+
+      <!-- 表单卡片 -->
+      <div class="bg-white rounded-2xl p-8 w-full max-w-[420px] shadow-lg border border-pink-100">
+        <!-- 昵称 -->
+        <div class="mb-5">
+          <label for="nickname" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+            你的昵称
+          </label>
+          <input
+            type="text" id="nickname"
+            placeholder="输入昵称（2-20个字符）" maxlength="20" autocomplete="off"
+            class="w-full px-4 py-3.5 border-2 border-pink-100 rounded-xl text-base bg-surface-input text-gray-700
+                   placeholder-gray-300 outline-none transition-all duration-200
+                   focus:border-macaron-pink-d focus:bg-white focus:ring-4 focus:ring-pink-100"
+          />
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="flex gap-3">
+          <button id="btnCreate"
+            class="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-white text-sm font-semibold
+                   bg-gradient-to-r from-macaron-pink-d to-[#E892A8] shadow-md shadow-pink-200
+                   hover:-translate-y-0.5 hover:shadow-lg hover:shadow-pink-200/50 active:translate-y-0 transition-all duration-200">
+            <span class="text-lg">🏠</span> 创建房间
+          </button>
+          <button id="btnShowJoin"
+            class="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-gray-600 text-sm font-semibold
+                   bg-white border-2 border-pink-100
+                   hover:bg-surface-hover hover:border-macaron-pink active:translate-y-0 transition-all duration-200">
+            <span class="text-lg">🚪</span> 加入房间
+          </button>
+        </div>
+
+        <!-- 加入房间区域 -->
+        <div id="joinSection" class="hidden mt-0">
+          <div class="flex items-center my-6 text-xs text-gray-300">
+            <span class="flex-1 h-px bg-pink-50"></span>
+            <span class="px-4">输入房间号加入</span>
+            <span class="flex-1 h-px bg-pink-50"></span>
+          </div>
+          <div class="mb-5">
+            <label for="roomId" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              房间号
+            </label>
+            <input
+              type="text" id="roomId"
+              placeholder="输入6位房间号" maxlength="6" autocomplete="off"
+              class="w-full px-4 py-3.5 border-2 border-pink-100 rounded-xl text-base bg-surface-input text-gray-700
+                     uppercase placeholder-gray-300 outline-none transition-all duration-200
+                     focus:border-macaron-pink-d focus:bg-white focus:ring-4 focus:ring-pink-100 tracking-widest font-mono"
+            />
+          </div>
+          <button id="btnJoin"
+            class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white text-sm font-semibold
+                   bg-gradient-to-r from-macaron-mint-d to-[#6DBB9A] shadow-md shadow-green-200
+                   hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-200/50 active:translate-y-0 transition-all duration-200">
+            <span class="text-lg">✨</span> 加入房间
+          </button>
+        </div>
+      </div>
+
+      <!-- 提示 -->
+      <div class="mt-6 text-center">
+        <p class="text-xs text-gray-300 leading-relaxed">
+          💡 创建房间后将获得6位房间号，分享给局域网内的小伙伴即可一起聊天
+        </p>
+      </div>
+    </div>
+
+    <!-- 加载面板 -->
+    <div id="loadingPanel" class="hidden text-center py-16">
+      <div class="w-12 h-12 mx-auto mb-5 border-4 border-pink-100 border-t-macaron-pink-d rounded-full animate-spin"></div>
+      <p id="loadingText" class="text-sm text-gray-400">正在进入房间...</p>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast"
+      class="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-white text-gray-700 px-6 py-3 rounded-xl
+             shadow-lg z-[1000] text-sm font-medium flex items-center gap-2.5 border-l-4 border-yellow-500
+             animate-[slideDown_.3s_ease]">
+      <span class="text-lg">⚠️</span>
+      <span id="toastText"></span>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

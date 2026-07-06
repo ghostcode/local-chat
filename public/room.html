@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聊天室</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            macaron: {
+              pink:   '#F8B4C8',
+              peach:  '#FCCB9F',
+              yellow: '#FDE89A',
+              mint:   '#B5EAD7',
+              blue:   '#B5D8EB',
+              lav:    '#C7CEEA',
+              lilac:  '#E2C6FF',
+              rose:   '#FFD1DC',
+              'pink-d':   '#D4839A',
+              'mint-d':   '#7BC4A8',
+              'blue-d':   '#7BAFCB',
+              'lav-d':    '#9A9FC5',
+            },
+            surface: {
+              main:   '#FFF5F7',
+              card:   '#FFFFFF',
+              input:  '#F9F4F6',
+              sidebar:'#FDF2F5',
+              hover:  '#FDF0F3',
+              msg2:   '#FFFFFF',
+              msg1:   '#E8F5F9',
+            },
+          },
+          fontFamily: {
+            sans: ['"Noto Sans SC"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-surface-main text-gray-700 font-sans antialiased">
+
+  <div class="max-w-[1000px] mx-auto h-screen flex flex-col">
+
+    <!-- 顶部信息栏 -->
+    <header class="flex items-center justify-between px-5 py-3 bg-white border-b border-pink-100 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span id="roomBadge"
+          class="bg-gradient-to-r from-macaron-pink to-macaron-peach text-white text-xs font-bold
+                 px-2.5 py-1 rounded-lg tracking-wider">ROOM</span>
+        <span id="roomIdDisplay" class="font-mono text-base font-bold text-gray-700 tracking-[0.15em]">------</span>
+        <button id="btnCopyRoom" title="复制房间地址"
+          class="bg-surface-hover px-2 py-1.5 rounded-lg text-sm cursor-pointer
+                 hover:bg-macaron-pink transition-colors duration-200">📋</button>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span id="onlineCount" class="text-lg font-bold text-macaron-mint-d">0</span>
+        <span class="text-xs text-gray-300">人在线</span>
+      </div>
+      <button id="btnLeave" title="离开房间"
+        class="text-xl opacity-60 hover:opacity-100 hover:bg-surface-hover px-1.5 py-1 rounded-lg
+               cursor-pointer transition-all duration-200">✖️</button>
+    </header>
+
+    <!-- 主体区域 -->
+    <div class="flex flex-1 overflow-hidden">
+      <!-- 侧边栏 - 用户列表 -->
+      <aside id="userSidebar" class="w-[200px] bg-surface-sidebar border-r border-pink-100 flex flex-col shrink-0 max-sm:hidden">
+        <div class="flex items-center justify-between px-4 py-4 text-xs font-semibold text-gray-400 border-b border-pink-50">
+          <span>在线成员</span>
+          <span id="sidebarCount" class="bg-macaron-mint-d text-white text-[11px] px-2.5 py-0.5 rounded-full">0</span>
+        </div>
+        <ul id="userList" class="flex-1 overflow-y-auto p-2 space-y-0.5"></ul>
+        <div class="px-4 py-3 border-t border-pink-50">
+          <p id="roomCreator" class="text-[11px] text-gray-300 truncate"></p>
+        </div>
+      </aside>
+
+      <!-- 聊天区域 -->
+      <main class="flex-1 flex flex-col bg-white min-w-0">
+        <!-- 消息列表 -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-1">
+          <div id="messagesEmpty" class="text-center text-gray-300 py-16 m-auto">
+            <div class="text-5xl mb-3 opacity-60">💬</div>
+            <p>还没有消息，发送第一条吧！</p>
+          </div>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="px-5 py-4 border-t border-pink-100 bg-white">
+          <div class="flex gap-2.5 items-end">
+            <button id="btnEmoji" title="表情"
+              class="w-12 h-12 rounded-xl bg-surface-input border-2 border-pink-100 flex items-center
+                     justify-center shrink-0 cursor-pointer transition-all duration-200 text-xl
+                     hover:border-macaron-blue-d hover:bg-white active:scale-95 select-none">😊</button>
+            <textarea id="messageInput"
+              placeholder="输入消息... (Enter 发送，Shift+Enter 换行)"
+              rows="1" maxlength="5000"
+              class="flex-1 px-4 py-3 border-2 border-pink-100 rounded-2xl text-sm bg-surface-input text-gray-700
+                     placeholder-gray-300 outline-none resize-none transition-all duration-200
+                     focus:border-macaron-blue-d focus:bg-white focus:ring-4 focus:ring-blue-100
+                     leading-relaxed max-h-[120px]"></textarea>
+            <button id="btnSend" title="发送"
+              class="w-12 h-12 rounded-xl bg-gradient-to-br from-macaron-blue-d to-macaron-lav-d text-white
+                     flex items-center justify-center shrink-0 cursor-pointer transition-all duration-200
+                     hover:scale-105 hover:shadow-lg hover:shadow-lavender-300/30 active:scale-95">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Emoji 面板 -->
+    <div id="emojiPanel" class="hidden fixed z-[90] bg-white rounded-2xl shadow-xl border border-pink-100 p-4 w-[320px] max-h-[260px] overflow-y-auto">
+      <div id="emojiGrid" class="grid grid-cols-8 gap-1.5"></div>
+    </div>
+
+    <!-- 分享房间弹窗 -->
+    <div id="shareModal" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-[100] backdrop-blur-sm">
+      <div class="bg-white rounded-2xl p-8 w-[90%] max-w-[420px] shadow-xl text-center">
+        <h3 class="text-2xl font-bold mb-2">🎉 房间已创建</h3>
+        <p class="text-sm text-gray-400 mb-6">分享以下信息给朋友，让他们加入你的房间：</p>
+        <div class="bg-surface-input rounded-xl p-5 mb-6 text-left">
+          <div class="mb-4">
+            <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1.5">房间号</label>
+            <div class="flex gap-2 items-center">
+              <code id="shareRoomId"
+                class="flex-1 bg-white px-3 py-2.5 rounded-lg text-sm text-gray-700 font-mono font-semibold
+                       border border-pink-50 select-all">------</code>
+              <button id="btnCopyShare"
+                class="bg-macaron-mint-d text-white px-4 py-2.5 rounded-lg text-xs font-semibold
+                       hover:bg-[#6DBB9A] transition-colors duration-200 whitespace-nowrap cursor-pointer">复制</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1.5">访问地址</label>
+            <div class="flex gap-2 items-center">
+              <code id="shareUrl"
+                class="flex-1 bg-white px-3 py-2.5 rounded-lg text-sm text-gray-700 font-mono font-semibold
+                       border border-pink-50 select-all truncate">http://---</code>
+              <button id="btnCopyUrl"
+                class="bg-macaron-mint-d text-white px-4 py-2.5 rounded-lg text-xs font-semibold
+                       hover:bg-[#6DBB9A] transition-colors duration-200 whitespace-nowrap cursor-pointer">复制</button>
+            </div>
+          </div>
+        </div>
+        <button id="btnCloseShare"
+          class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white text-sm font-semibold
+                 bg-gradient-to-r from-macaron-pink-d to-[#E892A8] shadow-md shadow-pink-200
+                 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-pink-200/50 active:translate-y-0 transition-all duration-200">
+          进入房间
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
