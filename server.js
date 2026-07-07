@@ -227,6 +227,36 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('new-message', message);
   });
 
+  // --- 发送图片 ---
+  socket.on('send-image', ({ image }) => {
+    const roomId = socket.data.roomId;
+    const nickname = socket.data.nickname;
+
+    if (!roomId || !nickname) return;
+    if (!image || typeof image !== 'string') return;
+    if (!image.startsWith('data:image/')) return;
+    // 限制单张图片 base64 大小不超过 5MB
+    if (image.length > 5 * 1024 * 1024) return;
+
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    const message = {
+      id: crypto.randomBytes(4).toString('hex'),
+      nickname: nickname,
+      image: image,
+      time: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
+      timestamp: Date.now()
+    };
+
+    room.messages.push(message);
+    if (room.messages.length > 100) {
+      room.messages.shift();
+    }
+
+    io.to(roomId).emit('new-message', message);
+  });
+
   // --- 断开连接 ---
   socket.on('disconnect', () => {
     const roomId = socket.data.roomId;

@@ -99,6 +99,11 @@
               class="w-12 h-12 rounded-xl bg-surface-input border-2 border-pink-100 flex items-center
                      justify-center shrink-0 cursor-pointer transition-all duration-200 text-xl
                      hover:border-macaron-blue-d hover:bg-white active:scale-95 select-none">😊</button>
+            <button id="btnImage" title="发送图片"
+              class="w-12 h-12 rounded-xl bg-surface-input border-2 border-pink-100 flex items-center
+                     justify-center shrink-0 cursor-pointer transition-all duration-200 text-xl
+                     hover:border-macaron-mint-d hover:bg-white active:scale-95 select-none">📷</button>
+            <input type="file" id="imageInput" accept="image/*" class="hidden">
             <textarea id="messageInput"
               placeholder="输入消息... (Enter 发送，Shift+Enter 换行)"
               rows="1" maxlength="5000"
@@ -162,6 +167,11 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- 图片预览弹窗 -->
+  <div id="imageLightbox" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[200]">
+    <img id="lightboxImage" src="" alt="预览" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl">
   </div>
 
   <script src="/socket.io/socket.io.js"></script>

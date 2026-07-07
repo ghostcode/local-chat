@@ -271,6 +271,36 @@ function initRoom(roomId, nickname, action) {
 
     const socket = io();
 
+    // 标题闪烁通知
+    const originalTitle = document.title;
+    let titleFlashTimer = null;
+    let unreadCount = 0;
+
+    function startTitleFlash() {
+      if (titleFlashTimer) return;
+      let showAlert = true;
+      titleFlashTimer = setInterval(() => {
+        const alertText = unreadCount > 1 ? `【${unreadCount}条新消息】` : '【新消息】';
+        document.title = showAlert ? `${alertText}${originalTitle}` : originalTitle;
+        showAlert = !showAlert;
+      }, 1000);
+    }
+
+    function stopTitleFlash() {
+      if (titleFlashTimer) {
+        clearInterval(titleFlashTimer);
+        titleFlashTimer = null;
+      }
+      document.title = originalTitle;
+      unreadCount = 0;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        stopTitleFlash();
+      }
+    });
+
     // 初始化 UI
     roomIdDisplay.textContent = roomId;
     roomBadge.textContent = roomId;
@@ -313,6 +343,11 @@ function initRoom(roomId, nickname, action) {
     // 新消息
     socket.on('new-message', (msg) => {
       addMessage(msg, msg.nickname === nickname ? 'self' : 'other');
+      // 页面不在前台且不是自己发的消息，闪烁标题提醒
+      if (document.hidden && msg.nickname !== nickname) {
+        unreadCount++;
+        startTitleFlash();
+      }
     });
 
     // 系统消息
@@ -383,7 +418,22 @@ function initRoom(roomId, nickname, action) {
 
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble';
-      bubble.textContent = msg.text;
+
+      if (msg.text) {
+        const textEl = document.createElement('div');
+        textEl.textContent = msg.text;
+        bubble.appendChild(textEl);
+      }
+
+      if (msg.image) {
+        const img = document.createElement('img');
+        img.src = msg.image;
+        img.className = 'message-image';
+        img.alt = '图片';
+        img.loading = 'lazy';
+        img.addEventListener('click', () => openLightbox(msg.image));
+        bubble.appendChild(img);
+      }
 
       wrapper.appendChild(meta);
       wrapper.appendChild(bubble);
@@ -437,6 +487,84 @@ function initRoom(roomId, nickname, action) {
       messageInput.style.height = 'auto';
       messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
     });
+
+    const btnImage = document.getElementById('btnImage');
+    const imageInput = document.getElementById('imageInput');
+    const imageLightbox = document.getElementById('imageLightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+
+    // ===== 图片发送 =====
+    const MAX_IMAGE_WIDTH = 1280;
+    const MAX_IMAGE_HEIGHT = 1280;
+    const IMAGE_QUALITY = 0.8;
+
+    btnImage.addEventListener('click', () => {
+      imageInput.click();
+    });
+
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('请选择图片文件');
+        imageInput.value = '';
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('图片大小不能超过 10MB');
+        imageInput.value = '';
+        return;
+      }
+
+      compressImage(file).then((base64) => {
+        socket.emit('send-image', { image: base64 });
+        imageInput.value = '';
+      }).catch((err) => {
+        console.error('图片压缩失败:', err);
+        showToast('图片处理失败');
+        imageInput.value = '';
+      });
+    });
+
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > MAX_IMAGE_WIDTH || height > MAX_IMAGE_HEIGHT) {
+            const ratio = Math.min(MAX_IMAGE_WIDTH / width, MAX_IMAGE_HEIGHT / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          URL.revokeObjectURL(url);
+          const base64 = canvas.toDataURL('image/jpeg', IMAGE_QUALITY);
+          resolve(base64);
+        };
+        img.onerror = (err) => {
+          URL.revokeObjectURL(url);
+          reject(err);
+        };
+        img.src = url;
+      });
+    }
+
+    function openLightbox(src) {
+      lightboxImage.src = src;
+      imageLightbox.classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      imageLightbox.classList.add('hidden');
+      lightboxImage.src = '';
+    }
+
+    imageLightbox.addEventListener('click', closeLightbox);
 
     // ===== Emoji 面板 =====
     const btnEmoji = document.getElementById('btnEmoji');
