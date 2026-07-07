@@ -1,0 +1,158 @@
+/* 引入 Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================
+   局域网聊天室 - Tailwind 补充样式
+   ========================================== */
+
+/* 自定义动画 */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 滚动条 */
+::-webkit-scrollbar           { width: 6px; }
+::-webkit-scrollbar-track     { background: transparent; }
+::-webkit-scrollbar-thumb     { background: #F0E0E5; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #B0B0BE; }
+
+/* ===== 消息气泡 ===== */
+.message-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  animation: fadeInUp .3s ease;
+}
+.message-wrapper.self   { align-self: flex-end; align-items: flex-end; }
+.message-wrapper.other  { align-self: flex-start; align-items: flex-start; }
+.message-wrapper.system { align-self: center; max-width: 90%; align-items: center; }
+
+.message-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.message-nickname { font-size: 12px; font-weight: 600; }
+.message-wrapper.other .message-nickname { color: #D4839A; }
+.message-wrapper.self  .message-nickname { color: #7BAFCB; }
+
+.message-time { font-size: 11px; color: #B0B0BE; }
+
+.message-bubble {
+  padding: 10px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.message-wrapper.other .message-bubble {
+  background: #FFFFFF;
+  border: 1px solid #F5EBEF;
+  border-bottom-left-radius: 4px;
+}
+.message-wrapper.self .message-bubble {
+  background: linear-gradient(135deg, #D4EEF7, #B5D8EB);
+  border-bottom-right-radius: 4px;
+}
+.message-wrapper.system .message-bubble {
+  background: rgba(181, 234, 215, 0.3);
+  color: #8E8E9E;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+/* 侧边栏用户项 */
+.user-list li {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #4A4A5A;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  transition: background .2s;
+  margin-bottom: 2px;
+  cursor: default;
+  list-style: none;
+  min-width: 0;
+}
+.user-list li:hover { background: #FDF0F3; }
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* 侧边栏用户昵称：允许换行，不截断 */
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4A4A5A;
+  word-break: break-all;
+  white-space: normal;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 消息中的图片 */
+.message-image {
+  max-width: 240px;
+  max-height: 240px;
+  border-radius: 12px;
+  margin-top: 6px;
+  cursor: zoom-in;
+  object-fit: cover;
+  display: block;
+  transition: transform .2s, box-shadow .2s;
+}
+.message-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.message-bubble:has(.message-image) {
+  padding: 10px;
+}
+.message-bubble:has(.message-image) > div:first-child {
+  padding: 0 6px;
+}
+
+/* 图片预览弹窗 */
+#imageLightbox {
+  cursor: zoom-out;
+}
+#imageLightbox img {
+  cursor: default;
+}
+
+/* 响应式 — 小屏隐藏侧边栏 */
+@media (max-width: 640px) {
+  .message-wrapper { max-width: 85%; }
+  .message-image { max-width: 200px; max-height: 200px; }
+}
+
+/* Grid 容器内容居中 */
+.grid {
+  justify-items: center;
+  align-items: center;
+}

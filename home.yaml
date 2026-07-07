@@ -1,0 +1,18 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]: 💬
+    - heading "局域网聊天室" [level=1] [ref=e7]
+    - paragraph [ref=e8]: 输入昵称，创建或加入一个房间
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]: 你的昵称
+      - textbox "你的昵称" [ref=e12]:
+        - /placeholder: 输入昵称（2-20个字符）
+    - generic [ref=e13]:
+      - button "🏠 创建房间" [ref=e14] [cursor=pointer]:
+        - generic [ref=e15]: 🏠
+        - text: 创建房间
+      - button "🚪 加入房间" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: 🚪
+        - text: 加入房间
+  - paragraph [ref=e19]: 💡 创建房间后将获得6位房间号，分享给局域网内的小伙伴即可一起聊天

@@ -4,10 +4,17 @@
   "description": "局域网聊天应用 - 支持创建聊天房间、分享房间、昵称加入",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "concurrently \"node server.js\" \"cd frontend && npm run dev\"",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "kill:3000": "kill -9 $(lsof -t -i :3000) || echo '没有进程运行在端口 3000'"
   },
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.7.4"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }
