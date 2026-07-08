@@ -9,20 +9,46 @@
 
 /* 自定义动画 */
 @keyframes slideDown {
-  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 滚动条 */
-::-webkit-scrollbar           { width: 6px; }
-::-webkit-scrollbar-track     { background: transparent; }
-::-webkit-scrollbar-thumb     { background: #F0E0E5; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #B0B0BE; }
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #F0E0E5;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B0B0BE;
+}
 
 /* ===== 消息气泡 ===== */
 .message-wrapper {
@@ -31,9 +57,22 @@
   max-width: 70%;
   animation: fadeInUp .3s ease;
 }
-.message-wrapper.self   { align-self: flex-end; align-items: flex-end; }
-.message-wrapper.other  { align-self: flex-start; align-items: flex-start; }
-.message-wrapper.system { align-self: center; max-width: 90%; align-items: center; }
+
+.message-wrapper.self {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.message-wrapper.other {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.message-wrapper.system {
+  align-self: center;
+  max-width: 90%;
+  align-items: center;
+}
 
 .message-meta {
   display: flex;
@@ -43,11 +82,23 @@
   padding: 0 4px;
 }
 
-.message-nickname { font-size: 12px; font-weight: 600; }
-.message-wrapper.other .message-nickname { color: #D4839A; }
-.message-wrapper.self  .message-nickname { color: #7BAFCB; }
+.message-nickname {
+  font-size: 12px;
+  font-weight: 600;
+}
 
-.message-time { font-size: 11px; color: #B0B0BE; }
+.message-wrapper.other .message-nickname {
+  color: #D4839A;
+}
+
+.message-wrapper.self .message-nickname {
+  color: #7BAFCB;
+}
+
+.message-time {
+  font-size: 11px;
+  color: #B0B0BE;
+}
 
 .message-bubble {
   padding: 10px 16px;
@@ -57,15 +108,18 @@
   word-break: break-word;
   white-space: pre-wrap;
 }
+
 .message-wrapper.other .message-bubble {
   background: #FFFFFF;
   border: 1px solid #F5EBEF;
   border-bottom-left-radius: 4px;
 }
+
 .message-wrapper.self .message-bubble {
   background: linear-gradient(135deg, #D4EEF7, #B5D8EB);
   border-bottom-right-radius: 4px;
 }
+
 .message-wrapper.system .message-bubble {
   background: rgba(181, 234, 215, 0.3);
   color: #8E8E9E;
@@ -89,7 +143,10 @@
   list-style: none;
   min-width: 0;
 }
-.user-list li:hover { background: #FDF0F3; }
+
+.user-list li:hover {
+  background: #FDF0F3;
+}
 
 .user-avatar {
   width: 32px;
@@ -125,15 +182,17 @@
   display: block;
   transition: transform .2s, box-shadow .2s;
 }
+
 .message-image:hover {
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .message-bubble:has(.message-image) {
   padding: 10px;
 }
-.message-bubble:has(.message-image) > div:first-child {
+
+.message-bubble:has(.message-image)>div:first-child {
   padding: 0 6px;
 }
 
@@ -141,18 +200,51 @@
 #imageLightbox {
   cursor: zoom-out;
 }
+
 #imageLightbox img {
   cursor: default;
 }
 
 /* 响应式 — 小屏隐藏侧边栏 */
 @media (max-width: 640px) {
-  .message-wrapper { max-width: 85%; }
-  .message-image { max-width: 200px; max-height: 200px; }
+  .message-wrapper {
+    max-width: 85%;
+  }
+
+  .message-image {
+    max-width: 200px;
+    max-height: 200px;
+  }
+
+  emoji-picker.emoji-picker-macaron {
+    --num-columns: 8;
+    height: 320px;
+  }
 }
 
 /* Grid 容器内容居中 */
 .grid {
   justify-items: center;
   align-items: center;
+}
+
+/* emoji-picker-element 马卡龙主题定制 */
+emoji-picker.emoji-picker-macaron {
+  --background: #FFFFFF;
+  --border-color: #F5EBEF;
+  --input-border-color: #F5EBEF;
+  --input-font-color: #4A4A5A;
+  --input-placeholder-color: #B0B0BE;
+  --category-font-color: #7BAFCB;
+  --emoticon-font-color: #4A4A5A;
+  --outline-color: #B5EAD7;
+  --button-hover-background: #FDF0F3;
+  --button-active-background: #FDF0F3;
+  --num-columns: 9;
+  --emoji-size: 1.5rem;
+  --emoji-padding: 0.4rem;
+  height: 360px;
+  border-radius: 12px;
+  border: none;
+  box-shadow: none;
 }

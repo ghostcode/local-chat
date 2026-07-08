@@ -1,3 +1,4 @@
-.workbuddy
-.playwright-cli
-node_modules
+.workbuddy/
+.playwright-cli/
+node_modules/
+dist/

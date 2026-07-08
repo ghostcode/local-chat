@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "emoji-picker-element": "^1.29.1",
     "socket.io-client": "^4.7.4",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
