@@ -263,6 +263,69 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('new-message', message);
   });
 
+  // --- 房主踢人 ---
+  socket.on('kick-user', ({ targetNickname }, callback) => {
+    const roomId = socket.data.roomId;
+    const nickname = socket.data.nickname;
+
+    if (!roomId || !nickname) {
+      return callback?.({ error: '未加入房间' });
+    }
+
+    const room = rooms.get(roomId);
+    if (!room) {
+      return callback?.({ error: '房间不存在' });
+    }
+
+    // 只有房主能踢人
+    if (room.creator !== nickname) {
+      return callback?.({ error: '只有房主才能踢人' });
+    }
+
+    // 不能踢自己
+    if (targetNickname.trim() === nickname) {
+      return callback?.({ error: '不能踢出自己' });
+    }
+
+    // 查找目标用户的 socket
+    let targetSocket = null;
+    for (const [sid, user] of room.users) {
+      if (user.nickname === targetNickname.trim()) {
+        targetSocket = io.sockets.sockets.get(sid);
+        break;
+      }
+    }
+
+    if (!targetSocket) {
+      return callback?.({ error: '用户不在房间中' });
+    }
+
+    // 从房间中移除
+    room.users.delete(targetSocket.id);
+    broadcastRoomInfo(roomId);
+
+    // 通知被踢者
+    targetSocket.emit('kicked', {
+      text: '你已被房主踢出房间',
+      time: new Date().toLocaleTimeString('zh-CN', { hour12: false })
+    });
+
+    // 标记为被踢，避免 disconnect 时再次广播"离开"
+    targetSocket.data.kicked = true;
+
+    // 断开被踢者连接
+    targetSocket.disconnect(true);
+
+    // 广播系统消息
+    io.to(roomId).emit('system-message', {
+      text: `🚫 ${targetNickname.trim()} 被房主踢出房间`,
+      time: new Date().toLocaleTimeString('zh-CN', { hour12: false })
+    });
+
+    callback?.({ success: true });
+    console.log(`[踢出] ${nickname} 将 ${targetNickname.trim()} 踢出房间 ${roomId}`);
+  });
+
   // --- 断开连接 ---
   socket.on('disconnect', () => {
     const roomId = socket.data.roomId;
@@ -271,6 +334,24 @@ io.on('connection', (socket) => {
     if (roomId && nickname) {
       const room = rooms.get(roomId);
       if (room) {
+        // 被踢用户不再广播"离开"消息
+        if (socket.data.kicked) {
+          room.users.delete(socket.id);
+          if (room.users.size === 0) {
+            // 房间已空：延迟清理（不广播"离开"）
+            console.log(`[空房] 房间 ${roomId} 已无人，将在 5 分钟后自动关闭`);
+            roomDeleteTimers.set(roomId, setTimeout(() => {
+              rooms.delete(roomId);
+              roomDeleteTimers.delete(roomId);
+              console.log(`[清理] 房间 ${roomId} 已超时空置，自动关闭`);
+            }, 5 * 60 * 1000));
+          } else {
+            broadcastRoomInfo(roomId);
+          }
+          console.log(`[断开] 被踢客户端: ${socket.id}`);
+          return;
+        }
+
         room.users.delete(socket.id);
 
         if (room.users.size === 0) {

@@ -42,6 +42,12 @@
           <li v-for="name in users" :key="name">
             <span class="user-avatar" :style="{ background: getUserColor(name) }">{{ name.charAt(0).toUpperCase() }}</span>
             <span class="user-name">{{ name }}{{ name === nickname ? ' (我)' : '' }}</span>
+            <button
+              v-if="nickname === creator && name !== nickname"
+              title="踢出房间"
+              class="ml-auto text-xs text-gray-300 hover:text-macaron-pink-d px-1.5 py-1 rounded transition-colors"
+              @click="kickUser(name)"
+            >✖</button>
           </li>
         </ul>
         <div class="px-4 py-3 border-t border-pink-50">
@@ -518,6 +524,29 @@ function onVisibilityChange() {
   }
 }
 
+function kickUser(targetName: string) {
+  if (nickname.value !== creator.value) {
+    showToast('只有房主才能踢人');
+    return;
+  }
+  if (targetName === nickname.value) {
+    showToast('不能踢出自己');
+    return;
+  }
+  if (!confirm(`确定要将 "${targetName}" 踢出房间吗？`)) {
+    return;
+  }
+  socketEmit<{ success?: boolean; error?: string }>(socket, 'kick-user', { targetNickname: targetName })
+    .then((res) => {
+      if (res.error) {
+        showToast(res.error);
+      }
+    })
+    .catch(() => {
+      showToast('踢人失败，请重试');
+    });
+}
+
 onMounted(async () => {
   document.addEventListener('click', closeEmojiPanel);
   document.addEventListener('visibilitychange', onVisibilityChange);
@@ -598,6 +627,13 @@ async function initRoom(action: 'created' | 'joined') {
 
   socket.on('system-message', (msg: { text: string; time: string }) => {
     addSystemMessage(msg);
+  });
+
+  socket.on('kicked', (msg: { text: string; time: string }) => {
+    addSystemMessage(msg);
+    alert(msg.text);
+    clearSession();
+    router.push('/');
   });
 
   socket.on('disconnect', () => {
