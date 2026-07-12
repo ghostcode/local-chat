@@ -326,6 +326,37 @@ io.on('connection', (socket) => {
     console.log(`[踢出] ${nickname} 将 ${targetNickname.trim()} 踢出房间 ${roomId}`);
   });
 
+  // --- 发送礼花 ---
+  socket.on('send-confetti', ({ targetNickname }) => {
+    const roomId = socket.data.roomId;
+    const nickname = socket.data.nickname;
+
+    if (!roomId || !nickname) return;
+    if (!targetNickname || targetNickname.trim().length === 0) return;
+    if (targetNickname.trim() === nickname) return;
+
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    // 找到目标用户的 socket，仅通知对方
+    let targetSocket = null;
+    for (const [sid, user] of room.users) {
+      if (user.nickname === targetNickname.trim()) {
+        targetSocket = io.sockets.sockets.get(sid);
+        break;
+      }
+    }
+
+    if (!targetSocket) return;
+
+    targetSocket.emit('confetti', {
+      fromNickname: nickname,
+      targetNickname: targetNickname.trim()
+    });
+
+    console.log(`[礼花] ${nickname} 给 ${targetNickname.trim()} 放礼花`);
+  });
+
   // --- 断开连接 ---
   socket.on('disconnect', () => {
     const roomId = socket.data.roomId;

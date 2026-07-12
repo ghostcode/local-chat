@@ -40,7 +40,13 @@
         </div>
         <ul id="userList" class="user-list flex-1 overflow-y-auto p-2 space-y-0.5">
           <li v-for="name in users" :key="name">
-            <span class="user-avatar" :style="{ background: getUserColor(name) }">{{ name.charAt(0).toUpperCase() }}</span>
+            <span
+              class="user-avatar"
+              :data-user="name"
+              :style="{ background: getUserColor(name) }"
+              :title="name === nickname ? '我自己' : '双击给 ' + name + ' 放礼花'"
+              @dblclick="onAvatarDblClick(name)"
+            >{{ name.charAt(0).toUpperCase() }}</span>
             <span class="user-name">{{ name }}{{ name === nickname ? ' (我)' : '' }}</span>
             <button
               v-if="nickname === creator && name !== nickname"
@@ -121,6 +127,7 @@
                      leading-relaxed max-h-[120px]"
               @keydown.enter.prevent="onEnterSend"
               @input="autoResize"
+              @paste="onPaste"
             ></textarea>
             <button
               id="btnSend"
@@ -221,6 +228,35 @@
     <img id="lightboxImage" :src="lightboxSrc" alt="预览" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl">
   </div>
 
+  <!-- 粘贴图片预览弹窗 -->
+  <div
+    v-show="pasteImageSrc"
+    id="pasteImagePreview"
+    class="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-[210]"
+    @click.self="cancelPasteImage"
+  >
+    <img
+      id="pastePreviewImage"
+      :src="pasteImageSrc"
+      alt="粘贴预览"
+      class="max-w-[80%] max-h-[70%] rounded-2xl shadow-2xl mb-6 object-contain bg-white/5"
+    />
+    <div class="flex items-center gap-4">
+      <button
+        id="btnCancelPaste"
+        class="px-6 py-2.5 rounded-xl bg-white text-gray-700 text-sm font-semibold
+               hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+        @click="cancelPasteImage"
+      >取消</button>
+      <button
+        id="btnConfirmPaste"
+        class="px-6 py-2.5 rounded-xl bg-macaron-mint-d text-white text-sm font-semibold
+               hover:bg-[#6DBB9A] transition-colors duration-200 cursor-pointer"
+        @click="sendPasteImage"
+      >确认发送</button>
+    </div>
+  </div>
+
   <!-- Toast 提示 -->
   <div
     v-show="toastVisible"
@@ -241,6 +277,7 @@ import { useSocket, socketEmit, sendMessage as emitSendMessage, sendImage as emi
 import { getSession, setSession, clearSession, getLocalUrl, getUserColor } from '@/utils';
 import type { ChatMessage, RoomInfo, JoinResponse } from '@/types';
 import 'emoji-picker-element';
+import confetti from 'canvas-confetti';
 
 const router = useRouter();
 
@@ -253,6 +290,10 @@ const messageText = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
 const messageInput = ref<HTMLTextAreaElement | null>(null);
 const imageInput = ref<HTMLInputElement | null>(null);
+
+// 粘贴图片预览
+const pasteImageSrc = ref('');
+const pendingImageBase64 = ref('');
 
 const onlineCount = computed(() => users.value.length);
 
@@ -429,6 +470,62 @@ function closeLightbox() {
   lightboxSrc.value = '';
 }
 
+function onPaste(e: ClipboardEvent) {
+  const clipboardData = e.clipboardData;
+  if (!clipboardData) return;
+
+  let imageFile: File | null = null;
+
+  // 优先从 files 读取（Windows 截图、文件复制等）
+  if (clipboardData.files && clipboardData.files.length > 0) {
+    imageFile = Array.from(clipboardData.files).find((f) => f.type.startsWith('image/')) || null;
+  }
+
+  // 部分浏览器通过 items 暴露图片
+  if (!imageFile && clipboardData.items) {
+    for (const item of clipboardData.items) {
+      if (item.type.startsWith('image/')) {
+        imageFile = item.getAsFile();
+        if (imageFile) break;
+      }
+    }
+  }
+
+  if (!imageFile) return;
+
+  e.preventDefault();
+
+  if (imageFile.size > 10 * 1024 * 1024) {
+    showToast('图片大小不能超过 10MB');
+    return;
+  }
+
+  compressImage(imageFile)
+    .then((base64) => {
+      pendingImageBase64.value = base64;
+      pasteImageSrc.value = base64;
+    })
+    .catch((err) => {
+      console.error('粘贴图片处理失败:', err);
+      showToast('图片处理失败');
+    });
+}
+
+function sendPasteImage() {
+  const base64 = pendingImageBase64.value;
+  if (!base64) return;
+  emitSendImage(socket, base64);
+  pasteImageSrc.value = '';
+  pendingImageBase64.value = '';
+  nextTick(() => messageInput.value?.focus());
+}
+
+function cancelPasteImage() {
+  pasteImageSrc.value = '';
+  pendingImageBase64.value = '';
+  nextTick(() => messageInput.value?.focus());
+}
+
 // emoji
 // emoji
 function toggleEmoji(e: MouseEvent) {
@@ -547,6 +644,27 @@ function kickUser(targetName: string) {
     });
 }
 
+function onAvatarDblClick(targetName: string) {
+  if (targetName === nickname.value) {
+    showToast('不能给自己放礼花哦');
+    return;
+  }
+  socket.emit('send-confetti', { targetNickname: targetName });
+  // triggerConfettiForUser(targetName);
+  showToast(`🎉 给 ${targetName} 放了个礼花！`, 2000);
+}
+
+function triggerConfettiForUser(_targetName: string) {
+  // confetti({
+  //   particleCount: 80,
+  //   spread: 70,
+  //   origin: { x: 0.5, y: 0.5 },
+  //   zIndex: 1000,
+  //   disableForReducedMotion: true
+  // });
+  confetti()
+}
+
 onMounted(async () => {
   document.addEventListener('click', closeEmojiPanel);
   document.addEventListener('visibilitychange', onVisibilityChange);
@@ -634,6 +752,10 @@ async function initRoom(action: 'created' | 'joined') {
     alert(msg.text);
     clearSession();
     router.push('/');
+  });
+
+  socket.on('confetti', ({ targetNickname }: { targetNickname: string }) => {
+    triggerConfettiForUser(targetNickname);
   });
 
   socket.on('disconnect', () => {
