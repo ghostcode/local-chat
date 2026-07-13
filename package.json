@@ -3,18 +3,32 @@
   "version": "1.0.0",
   "description": "局域网聊天应用 - 支持创建聊天房间、分享房间、昵称加入",
   "main": "server.js",
+  "bin": "launch.js",
   "scripts": {
     "start": "node server.js",
     "dev": "concurrently \"node server.js\" \"cd frontend && npm run dev\"",
     "build": "cd frontend && npm run build",
     "preview": "cd frontend && npm run preview",
-    "kill:3000": "kill -9 $(lsof -t -i :3000) || echo '没有进程运行在端口 3000'"
+    "kill:3000": "kill -9 $(lsof -t -i :3000) || echo '没有进程运行在端口 3000'",
+    "package": "npm run build && pkg . --out-path=dist-exe"
   },
   "dependencies": {
     "express": "^4.18.2",
+    "open": "^8.4.0",
     "socket.io": "^4.7.4"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "targets": [
+      "node18-win-x64"
+    ],
+    "icon": "chats.ico",
+    "assets": [
+      "dist/**/*",
+      "node_modules/socket.io/client-dist/**/*"
+    ]
   }
 }

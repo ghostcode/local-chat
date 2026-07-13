@@ -1,8 +1,10 @@
 const express = require('express');
 const http = require('http');
+const { spawn } = require('child_process');
 const { Server } = require('socket.io');
 const path = require('path');
 const crypto = require('crypto');
+const open = require('open');
 
 const app = express();
 const server = http.createServer(app);
@@ -55,6 +57,35 @@ function getLocalIPs() {
     }
   }
   return addresses;
+}
+
+// ============================================================
+// 打开浏览器（打包后 exe 使用）
+// ============================================================
+// open 包在 Windows 上内部调用 PowerShell，pkg 打包后容易失效，
+// 这里对 Windows 使用系统原生的 cmd /c start，与 open 包的旧实现一致。
+function openBrowser(url) {
+  const platform = process.platform;
+
+  if (platform === 'win32') {
+    // 注意：start 后面的空字符串 "" 用于指定窗口标题，避免 URL 被当作标题
+    const subprocess = spawn('cmd', ['/c', 'start', '', url], {
+      detached: true,
+      stdio: 'ignore'
+    });
+    subprocess.on('error', (err) => console.error('打开浏览器失败:', err));
+    subprocess.unref();
+  } else if (platform === 'darwin') {
+    open(url).catch((err) => {
+      console.error('open 包打开浏览器失败:', err);
+      spawn('open', [url], { detached: true, stdio: 'ignore' }).unref();
+    });
+  } else {
+    open(url).catch((err) => {
+      console.error('open 包打开浏览器失败:', err);
+      spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }).unref();
+    });
+  }
 }
 
 // ============================================================
@@ -457,4 +488,17 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`  局域网访问: http://${ip}:${PORT}`);
   }
   console.log('========================================\n');
+
+  // 仅打包后的 exe 启动时自动打开浏览器（使用本机 IP）
+  if (process.env.OPEN_BROWSER === '1') {
+    const ip = ips[0] || 'localhost';
+    const url = `http://${ip}:${PORT}`;
+    console.log(`正在打开浏览器: ${url}`);
+    try {
+      openBrowser(url);
+      console.log('已触发浏览器打开请求');
+    } catch (err) {
+      console.error('打开浏览器失败:', err);
+    }
+  }
 });
