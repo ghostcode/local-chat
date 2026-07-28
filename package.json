@@ -30,5 +30,8 @@
       "dist/**/*",
       "node_modules/socket.io/client-dist/**/*"
     ]
+  },
+  "engines": {
+    "node": ">=22.15.0"
   }
 }

@@ -47,7 +47,7 @@
               :title="name === nickname ? '我自己' : '双击给 ' + name + ' 放礼花'"
               @dblclick="onAvatarDblClick(name)"
             >{{ name.charAt(0).toUpperCase() }}</span>
-            <span class="user-name">{{ name }}{{ name === nickname ? ' (我)' : '' }}</span>
+            <span class="user-name" :title="name + (name === nickname ? ' (我)' : '')">{{ name }}{{ name === nickname ? ' (我)' : '' }}</span>
             <button
               v-if="nickname === creator && name !== nickname"
               title="踢出房间"
